@@ -1,0 +1,49 @@
+name: Build Android APK (Aurelian v3)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # GitHub web sitesinden tek tıkla başlatma
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: 📥 Kodu İndir
+        uses: actions/checkout@v4
+
+      - name: ☕ Java 17 Kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🐍 Python 3.11 Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Gerekli Sistem Paketlerini Yükle
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip libtool pkg-config zlib1g-dev \
+            libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
+            autoconf automake ccache clang lld libsqlite3-dev
+
+      - name: 🛠 Buildozer ve Cython Kur
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade buildozer cython==0.29.36 virtualenv
+
+      - name: 🚀 APK'yı Derle (Debug)
+        run: |
+          # Buildozer ile Android APK derlemesi
+          buildozer android debug
+
+      - name: 📤 Üretilen APK'yı GitHub'a Yükle (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aurelian-v3-Android-APK
+          path: bin/*.apk
+          retention-days: 30
